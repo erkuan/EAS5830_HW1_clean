@@ -23,7 +23,7 @@ def connect_with_middleware(contract_json):
     bsc_info = d['bsc']
 
     # BNB testnet URL
-    url = "https://eth-mainnet.g.alchemy.com/v2/JMmYJ0wEQCtK778sqPESw"
+    url = "https://data-seed-prebsc-1-s1.binance.org:8545"
     w3 = Web3(Web3.HTTPProvider(url))
 
     # Inject middleware for BNB testnet
