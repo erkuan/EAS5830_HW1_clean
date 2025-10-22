@@ -18,35 +18,21 @@ def connect_to_eth():
 
 
 def connect_with_middleware(contract_json):
-	with open(contract_json, "r") as f:
-		d = json.load(f)
-		d = d['bsc']
-		address = d['address']
-		abi = d['abi']
+    with open(contract_json, "r") as f:
+        d = json.load(f)
+    bsc_info = d['bsc']
 
-	# TODO complete this method
-	# The first section will be the same as "connect_to_eth()" but with a BNB url
-	url = "https://eth-mainnet.g.alchemy.com/v2/JMmYJ0wEQCtK778sqPESw"  # FILL THIS IN
-	w3 = Web3(Web3.HTTPProvider(url))
+    # BNB testnet URL
+    url = "https://eth-mainnet.g.alchemy.com/v2/JMmYJ0wEQCtK778sqPESw"
+    w3 = Web3(Web3.HTTPProvider(url))
 
-	# The second section requires you to inject middleware into your w3 object and
-	# create a contract object. Read more on the docs pages at https://web3py.readthedocs.io/en/stable/middleware.html
-	# and https://web3py.readthedocs.io/en/stable/web3.contract.html
+    # Inject middleware for BNB testnet
+    w3.middleware_onion.inject(ExtraDataToPOAMiddleware, layer=0)
 
-	w3.middleware_onion.inject(ExtraDataToPOAMiddleware, layer = 0)
+    # Use address and ABI from JSON
+    contract = w3.eth.contract(address=bsc_info['address'], abi=bsc_info['abi'])
 
-	abi = [
-	    {
-	        "inputs": [],
-	        "name": "merkleRoot",
-	        "outputs": [{"internalType": "string", "name": "", "type": "string"}],
-	        "stateMutability": "view",
-	        "type": "function"
-	    }
-	]
-	contract = w3.eth.contract(address = "0x426ce97416f8Eec4B786aE7b40b355c5BC7b41cD", abi = abi)
-
-	return w3, contract
+    return w3, contract
 
 
 if __name__ == "__main__":
