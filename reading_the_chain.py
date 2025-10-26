@@ -47,15 +47,15 @@ def is_ordered_block(w3, block_num):
 	ordered = False
 
 	# TODO YOUR CODE HERE
-    base_fee = block.get('baseFeePerGas', 0)
-    fees = []
-    for tx in block['transactions']:
-        if 'maxPriorityFeePerGas' in tx and tx['maxPriorityFeePerGas'] is not None:
-            fee = min(tx['maxPriorityFeePerGas'], tx['maxFeePerGas'] - base_fee)
-        else:
-            fee = tx['gasPrice'] - base_fee
-        fees.append(fee)
-    ordered = all(fees[i] >= fees[i+1] for i in range(len(fees)-1))
+  base_fee = block.get('baseFeePerGas', 0)
+  fees = []
+  for tx in block['transactions']:
+      if 'maxPriorityFeePerGas' in tx and tx['maxPriorityFeePerGas'] is not None:
+          fee = min(tx['maxPriorityFeePerGas'], tx['maxFeePerGas'] - base_fee)
+      else:
+          fee = tx['gasPrice'] - base_fee
+      fees.append(fee)
+  ordered = all(fees[i] >= fees[i+1] for i in range(len(fees)-1))
 	return ordered
 
 
