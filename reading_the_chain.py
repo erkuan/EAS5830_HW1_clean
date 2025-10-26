@@ -11,11 +11,10 @@ from web3.providers.rpc import HTTPProvider
 # infura_url = f"https://mainnet.infura.io/v3/{infura_token}"
 
 def connect_to_eth():
-	# TODO insert your code for this method from last week's assignment
-    url = "https://eth-mainnet.g.alchemy.com/v2/JMmYJ0wEQCtK778sqPESw"  
+    url = "https://eth-mainnet.g.alchemy.com/v2/JMmYJ0wEQCtK778sqPESw"  # FILL THIS IN
     w3 = Web3(HTTPProvider(url))
-    assert w3.is_connected(), f"Failed to connect to provider at {url}"	
-	return w3
+    assert w3.is_connected(), f"Failed to connect to provider at {url}"
+    return w3
 
 
 def connect_with_middleware(contract_json):
