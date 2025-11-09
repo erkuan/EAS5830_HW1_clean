@@ -51,7 +51,7 @@ contract Destination is AccessControl {
         "Token already registered"
     );
 
-    // Deploy BridgeToken; Destination is admin so it can mint
+    // Deploy new BridgeToken with this contract as admin (so it can mint)
     BridgeToken wrapped = new BridgeToken(
         _underlying_token,
         name,
@@ -59,10 +59,12 @@ contract Destination is AccessControl {
         address(this)
     );
 
+    // Make sure Destination (this contract) has MINTER_ROLE
+    wrapped.grantRole(wrapped.MINTER_ROLE(), address(this));
+
     // Record both directions
     underlying_tokens[_underlying_token] = address(wrapped);
     wrapped_tokens[address(wrapped)] = _underlying_token;
-
     tokens.push(address(wrapped));
 
     emit Creation(_underlying_token, address(wrapped));
