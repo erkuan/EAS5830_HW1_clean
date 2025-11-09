@@ -46,28 +46,16 @@ contract Destination is AccessControl {
 
 	function createToken(address _underlying_token, string memory name, string memory symbol ) public onlyRole(CREATOR_ROLE) returns(address) {
 		//YOUR CODE HERE
-    require(
-        underlying_tokens[_underlying_token] == address(0),
-        "Token already registered"
-    );
+    require(wrapped_tokens[underlying] == address(0), "Already exists");
 
-    // Deploy new BridgeToken with this contract as admin (so it can mint)
-    BridgeToken wrapped = new BridgeToken(
-        _underlying_token,
-        name,
-        symbol,
-        address(this)
-    );
-
-    // Make sure Destination (this contract) has MINTER_ROLE
+    BridgeToken wrapped = new BridgeToken(name, symbol);
     wrapped.grantRole(wrapped.MINTER_ROLE(), address(this));
 
-    // Record both directions
-    underlying_tokens[_underlying_token] = address(wrapped);
-    wrapped_tokens[address(wrapped)] = _underlying_token;
-    tokens.push(address(wrapped));
+    //
+    wrapped_tokens[underlying] = address(wrapped);
+    underlying_tokens[address(wrapped)] = underlying;
 
-    emit Creation(_underlying_token, address(wrapped));
+    emit Creation(underlying, address(wrapped));
     return address(wrapped);
 	}
 
