@@ -26,8 +26,8 @@ contract Destination is AccessControl {
 		//YOUR CODE HERE
     address bridgeTokenAddr = underlying_tokens[_underlying_token];
     require(bridgeTokenAddr != address(0), "Underlying token not registered");
+    require(_amount > 0, "Amount must be > 0");
 
-    // BridgeToken mint
     BridgeToken(bridgeTokenAddr).mint(_recipient, _amount);
 
     emit Wrap(_underlying_token, bridgeTokenAddr, _recipient, _amount);
@@ -37,8 +37,8 @@ contract Destination is AccessControl {
 		//YOUR CODE HERE
     address underlying = wrapped_tokens[_wrapped_token];
     require(underlying != address(0), "Wrapped token not recognized");
+    require(_amount > 0, "Amount must be > 0");
 
-    // Destory
     BridgeToken(_wrapped_token).burnFrom(msg.sender, _amount);
 
     emit Unwrap(underlying, _wrapped_token, msg.sender, _recipient, _amount);
@@ -47,13 +47,11 @@ contract Destination is AccessControl {
 	function createToken(address _underlying_token, string memory name, string memory symbol ) public onlyRole(CREATOR_ROLE) returns(address) {
 		//YOUR CODE HERE
     require(underlying_tokens[_underlying_token] == address(0), "Token already registered");
-    
-    
-    // New BridgeToken
+
     BridgeToken bridgeToken = new BridgeToken(_underlying_token, name, symbol, msg.sender);
+
     bridgeToken.grantRole(bridgeToken.MINTER_ROLE(), address(this));
 
-    // Record
     underlying_tokens[_underlying_token] = address(bridgeToken);
     wrapped_tokens[address(bridgeToken)] = _underlying_token;
     tokens.push(address(bridgeToken));
