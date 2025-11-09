@@ -172,7 +172,7 @@ def send_signed_msg(proof, random_leaf):
     contract = w3.eth.contract(address=w3.to_checksum_address(address), abi=abi)
 
     # Build transaction to call submit(proof, leaf)
-    tx = contract.functions.submit(random_leaf, proof).build_transaction({
+    tx = contract.functions.submit(proof， random_leaf).build_transaction({
         'from': acct.address,
         'nonce': w3.eth.get_transaction_count(acct.address),
         'gas': 300000,
