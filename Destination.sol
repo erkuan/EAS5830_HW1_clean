@@ -59,6 +59,9 @@ contract Destination is AccessControl {
         msg.sender
     );
 
+    // Give minting right to this contract
+    wrapped.grantRole(wrapped.MINTER_ROLE(), address(this));
+
     // Store mappings
     wrapped_tokens[_underlying_token] = address(wrapped);
     underlying_tokens[address(wrapped)] = _underlying_token;
