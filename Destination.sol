@@ -28,7 +28,7 @@ contract Destination is AccessControl {
     require(bridgeTokenAddr != address(0), "Underlying token not registered");
 
     // BridgeToken mint
-    BridgeToken(bridgeTokenAddr).mint(_recipient, _amount);
+    BridgeToken bridgeToken = new BridgeToken(_underlying_token, name, symbol, msg.sender);
 
     emit Wrap(_underlying_token, bridgeTokenAddr, _recipient, _amount);
 	}
