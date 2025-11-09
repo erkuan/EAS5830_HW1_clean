@@ -48,9 +48,11 @@ contract Destination is AccessControl {
 		//YOUR CODE HERE
     require(underlying_tokens[_underlying_token] == address(0), "Token already registered");
 
+    
     // New BridgeToken
     BridgeToken bridgeToken = new BridgeToken(_underlying_token, name, symbol, msg.sender);
-
+    bridgeToken.grantRole(bridgeToken.MINTER_ROLE(), address(this));
+    
     // Record
     underlying_tokens[_underlying_token] = address(bridgeToken);
     wrapped_tokens[address(bridgeToken)] = _underlying_token;
