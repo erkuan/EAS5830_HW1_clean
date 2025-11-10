@@ -1,4 +1,6 @@
 import eth_account
+from eth_account import Account
+from eth_account.messages import encode_defunct
 import random
 import string
 import json
@@ -9,51 +11,43 @@ from web3.middleware import ExtraDataToPOAMiddleware  # Necessary for POA chains
 
 def merkle_assignment():
     """
-        The only modifications you need to make to this method are to assign
-        your "random_leaf_index" and uncomment the last line when you are
-        ready to attempt to claim a prime. You will need to complete the
-        methods called by this method to generate the proof.
+    The only modifications you need to make to this method are to assign
+    your "random_leaf_index" and uncomment the last line when you are
+    ready to attempt to claim a prime. You will need to complete the
+    methods called by this method to generate the proof.
     """
     # Generate the list of primes as integers
     num_of_primes = 8192
     primes = generate_primes(num_of_primes)
 
-    # Create a version of the list of primes in bytes32 format
+    # Convert the list of primes to bytes32 format
     leaves = convert_leaves(primes)
 
-    # Build a Merkle tree using the bytes32 leaves as the Merkle tree's leaves
+    # Build a Merkle tree using the leaves
     tree = build_merkle(leaves)
 
-    # Select a random leaf and create a proof for that leaf
-    #random_leaf_index = 0 #TODO generate a random index from primes to claim (0 is already claimed)
-
-    import random
+    # Select a random leaf index (0 is already claimed)
     random_leaf_index = random.randint(1, num_of_primes - 1)
-
     proof = prove_merkle(tree, random_leaf_index)
 
-    # This is the same way the grader generates a challenge for sign_challenge()
-    challenge = ''.join(random.choice(string.ascii_letters) for i in range(32))
-    # Sign the challenge to prove to the grader you hold the account
+    # Generate a challenge string for signing
+    challenge = ''.join(random.choice(string.ascii_letters) for _ in range(32))
     addr, sig = sign_challenge(challenge)
 
     if sign_challenge_verify(challenge, addr, sig):
-        tx_hash = '0x'
-        # TODO, when you are ready to attempt to claim a prime (and pay gas fees),
-        #  complete this method and run your code with the following line un-commented
-        # tx_hash = send_signed_msg(proof, leaves[random_leaf_index])
+        # Send signed transaction to claim the prime
         tx_hash = send_signed_msg(proof, leaves[random_leaf_index])
+        print("Transaction hash:", tx_hash)
 
 
 def generate_primes(num_primes):
     """
-        Function to generate the first 'num_primes' prime numbers
-        returns list (with length n) of primes (as ints) in ascending order
+    Generate the first 'num_primes' prime numbers.
+    Returns a list of primes (ints) in ascending order.
     """
     primes_list = []
-
-    #TODO YOUR CODE HERE
     num = 2
+
     while len(primes_list) < num_primes:
         is_prime = True
         for p in primes_list:
@@ -71,36 +65,29 @@ def generate_primes(num_primes):
 
 def convert_leaves(primes_list):
     """
-        Converts the leaves (primes_list) to bytes32 format
-        returns list of primes where list entries are bytes32 encodings of primes_list entries
+    Convert the list of primes to bytes32 format.
+    Returns a list of bytes32-encoded primes.
     """
-
-    # TODO YOUR CODE HERE
     leaves_bytes = []
     for p in primes_list:
-        # Convert each prime to 32-byte big-endian representation
         b = p.to_bytes(32, byteorder='big')
         leaves_bytes.append(b)
-
     return leaves_bytes
 
 
 def build_merkle(leaves):
     """
-        Function to build a Merkle Tree from the list of prime numbers in bytes32 format
-        Returns the Merkle tree (tree) as a list where tree[0] is the list of leaves,
-        tree[1] is the parent hashes, and so on until tree[n] which is the root hash
-        the root hash produced by the "hash_pair" helper function
+    Build a Merkle Tree from the list of bytes32 leaves.
+    Returns a list of levels, from leaves up to the root.
     """
-
-    #TODO YOUR CODE HERE
     tree = [leaves]
     current = leaves
+
     while len(current) > 1:
         next_level = []
         for i in range(0, len(current), 2):
             left = current[i]
-            right = current[i+1]  # 
+            right = current[i + 1] if i + 1 < len(current) else left
             parent = hash_pair(left, right)
             next_level.append(parent)
         tree.append(next_level)
@@ -109,82 +96,68 @@ def build_merkle(leaves):
     return tree
 
 
-def prove_merkle(merkle_tree, random_indx):
+def prove_merkle(merkle_tree, leaf_index):
     """
-        Takes a random_index to create a proof of inclusion for and a complete Merkle tree
-        as a list of lists where index 0 is the list of leaves, index 1 is the list of
-        parent hash values, up to index -1 which is the list of the root hash.
-        returns a proof of inclusion as list of values
+    Create a Merkle proof of inclusion for the leaf at 'leaf_index'.
+    Returns a list of sibling hashes from leaf to root.
     """
-    merkle_proof = []
-    # TODO YOUR CODE HERE
-    idx = random_indx
+    proof = []
+    idx = leaf_index
+
     for level in range(len(merkle_tree) - 1):
         layer = merkle_tree[level]
-        pair_index = idx ^ 1  # sibling index
-        if pair_index < len(layer):
-            merkle_proof.append(layer[pair_index])
+        sibling_index = idx ^ 1  # flip last bit to get sibling
+        if sibling_index < len(layer):
+            proof.append(layer[sibling_index])
         else:
-            # if no sibling, append self (consistent with duplicate behavior)
-            merkle_proof.append(layer[idx])
+            proof.append(layer[idx])  # duplicate if no sibling
         idx //= 2
 
-    return merkle_proof
+    return proof
 
 
 def sign_challenge(challenge):
     """
-        Takes a challenge (string)
-        Returns address, sig
-        where address is an ethereum address and sig is a signature (in hex)
-        This method is to allow the auto-grader to verify that you have
-        claimed a prime
+    Sign a challenge string with the account's private key.
+    Returns the address and the signature in hex.
     """
     acct = get_account()
-
     addr = acct.address
     eth_sk = acct.key
 
-    # TODO YOUR CODE HERE
-    #eth_sig_obj = 'placeholder'
-
-    from eth_account.messages import encode_defunct
     msg = encode_defunct(text=challenge)
-    eth_sig_obj = eth_account.Account.sign_message(msg, eth_sk)
+    eth_sig_obj = eth_account.Account.sign_message(msg, private_key=eth_sk)
 
     return addr, eth_sig_obj.signature.hex()
 
 
 def send_signed_msg(proof, random_leaf):
     """
-        Takes a Merkle proof of a leaf, and that leaf (in bytes32 format)
-        builds signs and sends a transaction claiming that leaf (prime)
-        on the contract
+    Build, sign, and send a transaction claiming a leaf on the contract.
     """
     chain = 'bsc'
-
     acct = get_account()
     address, abi = get_contract_info(chain)
     w3 = connect_to(chain)
 
-    # TODO YOUR CODE HERE
-    #tx_hash = 'placeholder'
-
     contract = w3.eth.contract(address=w3.to_checksum_address(address), abi=abi)
 
-    # Build transaction to call submit(proof, leaf)
     tx = contract.functions.submit(proof, random_leaf).build_transaction({
-        'from': acct.address,
-        'nonce': w3.eth.get_transaction_count(acct.address),
-        'gas': 300000,
-        'gasPrice': w3.to_wei('10', 'gwei'),
-        'chainId': 97  # BSC testnet
+    'from': acct.address,
+    'nonce': w3.eth.get_transaction_count(acct.address),
+    'gas': 300000,
+    'gasPrice': w3.to_wei('10', 'gwei'),
+    'chainId': 97  # BSC testnet
     })
 
     signed_tx = w3.eth.account.sign_transaction(tx, private_key=acct.key)
-    tx_hash = w3.eth.send_raw_transaction(signed_tx.rawTransaction)
+    tx_hash = w3.eth.send_raw_transaction(signed_tx.raw_transaction)
 
-    return tx_hash
+    # Wait for the transaction to be mined
+    receipt = w3.eth.wait_for_transaction_receipt(tx_hash)
+   
+    return w3.to_hex(tx_hash)    
+
 
 
 # Helper functions that do not need to be modified
