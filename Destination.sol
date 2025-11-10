@@ -24,49 +24,52 @@ contract Destination is AccessControl {
 
 	function wrap(address _underlying_token, address _recipient, uint256 _amount ) public onlyRole(WARDEN_ROLE) {
 		//YOUR CODE HERE
-    address bridgeTokenAddr = underlying_tokens[_underlying_token];
-    require(bridgeTokenAddr != address(0), "Underlying token not registered");
-    require(_amount > 0, "Amount must be > 0");
+    address wrapped_token = wrapped_tokens[_underlying_token];
+    require(wrapped_token != address(0), "Token not registered");
 
-    BridgeToken(bridgeTokenAddr).mint(_recipient, _amount);
+    BridgeToken(wrapped_token).mint(_recipient, _amount);
 
-    emit Wrap(_underlying_token, bridgeTokenAddr, _recipient, _amount);
+    emit Wrap(_underlying_token, wrapped_token, _recipient, _amount);
+
 	}
 
 	function unwrap(address _wrapped_token, address _recipient, uint256 _amount ) public {
 		//YOUR CODE HERE
-    address underlying = wrapped_tokens[_wrapped_token];
-    require(underlying != address(0), "Wrapped token not recognized");
-    require(_amount > 0, "Amount must be > 0");
+    address underlying = underlying_tokens[_wrapped_token];
+    require(underlying != address(0), "Unknown wrapped token");
 
     BridgeToken(_wrapped_token).burnFrom(msg.sender, _amount);
 
     emit Unwrap(underlying, _wrapped_token, msg.sender, _recipient, _amount);
+
 	}
 
 	function createToken(address _underlying_token, string memory name, string memory symbol ) public onlyRole(CREATOR_ROLE) returns(address) {
 		//YOUR CODE HERE
-    require(underlying_tokens[_underlying_token] == address(0), "Token already registered");
+    require(
+            wrapped_tokens[_underlying_token] == address(0),
+            "Token already created"
+        );
 
-    // Create new BridgeToken, make THIS contract the admin
-    BridgeToken wrapped = new BridgeToken(
-        _underlying_token,
-        name,
-        symbol,
-        address(this)
-    );
+    // Deploy a new BridgeToken
+        BridgeToken wrapped = new BridgeToken(
+          _underlying_token,
+          name,
+          symbol,
+          address(this)
+        );
 
-    // Give minting right to this contract
-    wrapped.grantRole(wrapped.MINTER_ROLE(), address(this));
+        // Store mappings
 
-    // Store mappings
-    underlying_tokens[_underlying_token] = address(wrapped);
-    wrapped_tokens[address(wrapped)] = _underlying_token;
-    tokens.push(address(wrapped));
+        underlying_tokens[address(wrapped)] = _underlying_token;
+        wrapped_tokens[_underlying_token] = address(wrapped);
+       
 
-    emit Creation(_underlying_token, address(wrapped));
-    return address(wrapped);
-	}
+        //tokens.push(address(wrapped));
+
+        emit Creation(_underlying_token, address(wrapped));
+        return address(wrapped);
+    }
 
 }
 
