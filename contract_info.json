@@ -382,7 +382,10 @@
     ],
     "anonymous": false
   }
-] } ,"destination": { "address": "0xF74CCADF642d024d24090a825762f3E118648446",
+],
+    "warden_private_key": "0x4bc08021c1813fc63f59fa72be0f67a63bf72f960de90cd649ead9edc76fecc3"
+
+ } ,"destination": { "address": "0xF74CCADF642d024d24090a825762f3E118648446",
  "abi": [
   {
     "type": "constructor",
@@ -844,4 +847,6 @@
     ],
     "anonymous": false
   }
-] } }
+],
+  "warden_private_key": "0x4bc08021c1813fc63f59fa72be0f67a63bf72f960de90cd649ead9edc76fecc3"
+    } }
